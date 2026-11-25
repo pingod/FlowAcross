@@ -247,7 +247,7 @@ FlowAcross/
 │   ├── src/                # React 界面
 │   └── src-tauri/          # Tauri 外壳 + Engine
 ├── scripts/                # 打包、签名、改版本号脚本
-├── .github/workflows/      # CI、发版（release.yml）、补传到 OSS（mirror-oss.yml）、Windows 测试包
+├── .github/workflows/      # CI、发版（release.yml）、补传到 OSS（mirror-oss.yml）、Windows 和 Arch 测试包
 └── docs/
     ├── architecture.md     # 本文档
     ├── roadmap.md          # 里程碑

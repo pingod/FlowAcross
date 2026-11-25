@@ -154,4 +154,5 @@ git push origin main v0.2.2-beta.1
 - **「草稿里的 Linux 安装包不全」**（出现在「把 Linux 安装包写进更新清单」这一步）：缺某个安装包或它的 `.sig` 签名文件。看「打包 Linux」里「给 Linux 安装包签名」的日志，修好后重新运行失败的任务。
 - **「草稿里缺少 Linux 安装包」**：要等 Linux 包也打完才发布。看「打包 Linux」的日志，修好后重新运行失败的任务。
 - **只想要一个 Windows 测试包**：Actions 页面手动运行「Windows 测试包」，安装包在运行结果的附件里，不会触发自动更新。
+- **只想要一个 Arch 系（pacman）测试包**：Actions 页面手动运行「Arch 测试包」，运行结果的附件里是 `.pkg.tar.zst`，用 `sudo pacman -U 文件名` 安装，不会触发自动更新。和发版一样先在 Ubuntu 上打 `.deb`，再在 Arch 容器里重新打包，不重新编译。
 - **想撤回一个有问题的版本**：在发布仓库把它删掉或改回草稿，`latest/download` 会指向上一个正式版本；已经更新的用户需要等下一个版本。**注意这只撤回了 GitHub 这一边**：已安装的流界先读 OSS 上的 `FlowAcross/latest.json`，它仍指向被撤回的版本，「补传到阿里云 OSS」工作流也不允许把清单换回旧版本。目前没有自动回滚：要么尽快发一个修好的新版本（推荐），要么在 OSS 控制台手动把 `FlowAcross/latest.json` 和 `FlowAcross/latest/` 换回上一个版本的内容。

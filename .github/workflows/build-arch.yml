@@ -1,0 +1,62 @@
+name: Arch 测试包
+
+# 在 GitHub 仓库的 Actions 页面手动运行，只打 Arch 系（Arch、CachyOS、Manjaro）用的 pacman 安装包，
+# 安装包作为 Actions 附件下载（不发布、不触发自动更新）。正式发版走 release.yml（推送 v* 标签）。
+# 和发版一样先在 Ubuntu 上打出 .deb，再由 scripts/build-arch-pkg.sh 在 Arch 官方容器里重新打包，不重新编译。
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 包版本号（默认取 app/package.json；Arch 里连字符会写成下划线）
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: 打 Arch 安装包
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+
+      # 和发版一样用较老的系统打包，装得上的发行版更多（glibc 向后兼容，不向前兼容）。
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev \
+            libxkbcommon-dev patchelf file
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: 安装前端依赖
+        working-directory: app
+        run: npm ci
+
+      # 只要 .deb 作为 Arch 包的原料，不用打 AppImage。
+      - name: 构建 .deb
+        working-directory: app
+        run: npm run tauri -- build --bundles deb
+
+      - name: 打 Arch（pacman）安装包
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          version="${VERSION:-$(jq -r .version app/package.json)}"
+          echo "版本号：$version"
+          scripts/build-arch-pkg.sh target/release/bundle/deb/*.deb "$version" arch-package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FlowAcross-arch-pacman
+          path: arch-package/*.pkg.tar.zst
+          if-no-files-found: error
